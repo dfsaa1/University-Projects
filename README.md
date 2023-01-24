@@ -1,1 +1,2 @@
 # University-Projects
+This repository contains the projects that I, Diogo Azeitona, student of Telecommunications and Informatics Engineering, have developed at Iscte - University Institute of Lisbon so far. Enjoy!
