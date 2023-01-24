@@ -1,0 +1,97 @@
+FUNCTION_BLOCK robot
+
+VAR_INPUT				
+	right : REAL;
+	left : REAL;
+	center : REAL;
+	toxicity : REAL;
+END_VAR
+
+VAR_OUTPUT
+	angulo : REAL;
+	action : REAL;
+	velocity : REAL;
+END_VAR
+
+FUZZIFY toxicity			
+	TERM edible := (0.6,0) (1, 1); 
+	TERM none := (0.3,0) (0.5,1) (0.7,0);
+	TERM poisonous := (0,1) (0.4,0);
+END_FUZZIFY
+
+FUZZIFY right			
+	TERM near := (0, 1) (4, 0); 
+	TERM medium := (3, 0) (5,1) (7,0);
+	TERM far := (6, 0) (10,1);
+END_FUZZIFY
+
+FUZZIFY left			
+	TERM near := (0, 1) (4, 0); 
+	TERM medium := (3, 0) (5,1) (7,0);
+	TERM far := (6, 0) (10,1);
+END_FUZZIFY
+
+FUZZIFY center		
+	TERM near := (0, 1) (4, 0); 
+	TERM medium := (3, 0) (5,1) (7,0);
+	TERM far := (6, 0) (10,1);
+END_FUZZIFY
+
+DEFUZZIFY action			
+	TERM pick_up := 1;
+	TERM destroy := -1;
+	TERM no_action := 0;
+	METHOD : COGS;			
+END_DEFUZZIFY
+
+DEFUZZIFY angulo			
+	TERM strong_left := (-45,1) (-22.5,0);
+	TERM left := (-22.5,0) (-11,1) (0,0);
+	TERM center := (-5,0) (0,1) (5,0);
+	TERM right := (0,0) (11,1) (22.5,0);
+	TERM strong_right := (22.5,0) (45,1);
+	METHOD : COG;		
+	DEFAULT := 0;		
+END_DEFUZZIFY
+
+DEFUZZIFY velocity			
+	TERM slow := 2; 
+	TERM medium := 5;
+	TERM fast := 10;
+	METHOD : COGS;			
+END_DEFUZZIFY
+
+RULEBLOCK No1
+	AND : MIN;			
+	ACT : MIN;			
+	ACCU : MAX;			
+
+	RULE 1 : IF right IS near THEN angulo IS strong_right;
+	RULE 2 : IF right IS medium THEN angulo IS right; 
+	RULE 3 : IF center IS near THEN angulo IS center;
+	RULE 4 : IF left IS medium THEN angulo IS left;
+	RULE 5 : IF left IS near THEN angulo IS strong_left;
+END_RULEBLOCK
+
+RULEBLOCK No2
+	AND : MIN;			
+	ACT : MIN;			
+	ACCU : MAX;			
+
+	RULE 1 : IF toxicity IS poisonous THEN action IS destroy;
+	RULE 2 : IF toxicity IS none THEN action IS no_action; 
+	RULE 3 : IF toxicity IS edible THEN action IS pick_up;
+END_RULEBLOCK
+
+RULEBLOCK No3
+	AND : MIN;			
+	ACT : MIN;			
+	ACCU : MAX;			
+
+RULE 1 : IF left IS near OR right IS near OR center IS near THEN velocity IS slow;
+	RULE 2 : IF left IS medium OR right IS medium OR center IS medium THEN velocity IS medium;
+	RULE 3 : IF left IS far OR right IS far OR center IS far THEN velocity IS fast;
+
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK
